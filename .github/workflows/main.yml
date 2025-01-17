@@ -9,10 +9,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps: 
-    - uses:  actions/checkout@v4.2.2
-    - name: Construcao da imagem Docker
-    - uses: docker/build-push-action@v6.12.0
-      with: 
+      # Checkout do código
+      - uses: actions/checkout@v3
+      
+      # Construção e push da imagem Docker
+      - name: Construcao da imagem Docker
+        uses: docker/build-push-action@v3
+        with: 
           context: ./src  
           file: ./src/Dockerfile
           push: true
