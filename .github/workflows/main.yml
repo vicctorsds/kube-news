@@ -1,0 +1,22 @@
+name: CI-CD Desafio
+
+on: 
+  push: 
+    branches: ["main"]
+
+jobs: 
+  CI:  
+    runs-on: ubuntu-latest
+
+    steps: 
+    - uses:  actions/checkout@v4.2.2
+    
+    - name: Construcao da imagem Docker
+    - uses: docker/build-push-action@v6.12.0
+        with: 
+          context: ./src  
+          file: ./src/Dockerfile
+          push: true
+          tags: |
+            vicctorsds/desafio-kube-cicd:v1
+            vicctorsds/desafio-kube-cicd:latest
