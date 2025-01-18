@@ -1,66 +1,52 @@
 name: CI-CD Desafio
 
-on:
-  push:
-    branches: ["main"]
+on: 
+push: 
+branches: ["main"]
 
-jobs:
-  CI:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout do código
-        uses: actions/checkout@v3
+jobs: 
+CI:  
+runs-on: ubuntu-latest
 
-      - name: Autenticação no DockerHub
-        uses: docker/login-action@v3.3.0
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+steps: 
+# Checkout do código
+- uses: actions/checkout@v3
 
-      - name: Construção e push da imagem Docker
-        uses: docker/build-push-action@v3
-        with:
-          context: ./src
-          file: ./src/Dockerfile
-          push: true
-          tags: |
-            vicctorsds/desafio-kube-cicd:${{ github.run_id }}
-            vicctorsds/desafio-kube-cicd:latest
+# Autenticação no DockerHub
+- name: Autenticacao do DockerHub
+uses: docker/login-action@v3.3.0
+with: 
+username: ${{ secrets.DOCKER_USERNAME }}
+password: ${{ secrets.DOCKER_PASSWORD }}
 
-  CD:
-    runs-on: ubuntu-latest
-    needs: [CI]
-    steps:
-      - name: Checkout do código
-        uses: actions/checkout@v3
+# Construção e push da imagem Docker
+- name: Construcao da imagem Docker
+uses: docker/build-push-action@v3
+with: 
+context: ./src  
+file: ./src/Dockerfile
+push: true
+tags: |
+           vicctorsds/desafio-kube-cicd:${{ github.run_id }}
+           vicctorsds/desafio-kube-cicd:latest
 
-      # Instalar o eksctl
-      - name: Instalar o eksctl
-        run: |
-          curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.106.0/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
-          sudo mv /tmp/eksctl /usr/local/bin
+ CD:   
+runs-on: ubuntu-latest
+needs: [CI]
+steps:  
+# Checkout do código
+- uses: actions/checkout@v3
 
-      # Atualizar kubeconfig para o EKS
-      - name: Update kubeconfig for EKS using eksctl
-        run: eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --name desafio-loomi
-
-      # Verificar Configuração do Kubectl
-      - name: Verificar Configuração do Kubectl
-        run: kubectl config view
-
-      # Descrever o Deployment "web"
-      - name: Descrever o Deployment web
-        run: kubectl describe deployment web --namespace default
-
-      # Esperar pelo Rollout do Deployment
-      - name: Esperar pelo Rollout do Deployment
-        run: kubectl rollout status deployment/web --namespace default --timeout=10m
-
-      # Verificar os Logs do Pod
-      - name: Verificar os Logs da Pod
-        run: |
-          # Pegar o nome da primeira Pod com o label 'app=web'
-          POD_NAME=$(kubectl get pods --namespace default -l app=web -o jsonpath='{.items[0].metadata.name}')
-          
-          # Exibir os logs do Pod
-          kubectl logs $POD_NAME --namespace default
+# Setando o K8S
+- name: Definindo o context
+uses: Azure/k8s-set-context@v3.0
+with: 
+method: kubeconfig
+kubeconfig: ${{ secrets.K8S_CONFIG }}
+      -  name: Deploy to Kubernetes cluster
+         uses: Azure/k8s-deploy@v4.9 
+         with: 
+           images: vicctorsds/desafio-kube-cicd:${{ github.run_id }}
+           manifests: |
+           k8s/deployment.yaml
+        
