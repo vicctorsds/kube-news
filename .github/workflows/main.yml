@@ -44,16 +44,23 @@ jobs:
       - name: Update kubeconfig for EKS using eksctl
         run: eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --name desafio-loomi
 
+      # Verificar Configuração do Kubectl
       - name: Verificar Configuração do Kubectl
         run: kubectl config view
 
+      # Descrever o Deployment "web"
       - name: Descrever o Deployment web
         run: kubectl describe deployment web --namespace default
 
+      # Esperar pelo Rollout do Deployment
       - name: Esperar pelo Rollout do Deployment
         run: kubectl rollout status deployment/web --namespace default --timeout=10m
 
+      # Verificar os Logs do Pod
       - name: Verificar os Logs da Pod
         run: |
+          # Pegar o nome da primeira Pod com o label 'app=web'
           POD_NAME=$(kubectl get pods --namespace default -l app=web -o jsonpath='{.items[0].metadata.name}')
+          
+          # Exibir os logs do Pod
           kubectl logs $POD_NAME --namespace default
