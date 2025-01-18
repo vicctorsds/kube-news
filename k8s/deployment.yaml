@@ -60,6 +60,7 @@ spec:
       containers:
         - name: web
           image: vicctorsds/desafio-kube-cicd
+          progressDeadlineSeconds: 1200
           ports:
           - containerPort: 8080
           env:
@@ -71,7 +72,6 @@ spec:
             value: "Pg#123" 
           - name: DB_HOST
             value: "postgre"  
-      progressDeadlineSeconds: 1200
 
 ---
 apiVersion: v1
