@@ -15,14 +15,21 @@ spec:
         - name: postgre
           image: postgres:15.0
           ports:
-          - containerPort: 5432
+            - containerPort: 5432
           env:
-          - name: POSTGRES_DB
-            value: "kubenews"
-          - name: POSTGRES_USER
-            value: "kubenews"
-          - name: POSTGRES_PASSWORD
-            value: "Pg#123"
+            - name: POSTGRES_DB
+              value: "kubenews"
+            - name: POSTGRES_USER
+              value: "kubenews"
+            - name: POSTGRES_PASSWORD
+              value: "Pg#123"
+          resources:
+            requests:
+              memory: "128Mi"  # Memória mínima solicitada
+              cpu: "250m"      # CPU mínima solicitada
+            limits:
+              memory: "256Mi"  # Memória máxima permitida
+              cpu: "500m"      # CPU máxima permitida
 
 ---
 
@@ -67,16 +74,23 @@ spec:
         - name: web
           image: vicctorsds/desafio-kube-cicd
           ports:
-          - containerPort: 8080
+            - containerPort: 8080
           env:
-          - name: DB_DATABASE
-            value: "kubenews"
-          - name: DB_USERNAME
-            value: "kubenews"
-          - name: DB_PASSWORD
-            value: "Pg#123"
-          - name: DB_HOST
-            value: "postgre"
+            - name: DB_DATABASE
+              value: "kubenews"
+            - name: DB_USERNAME
+              value: "kubenews"
+            - name: DB_PASSWORD
+              value: "Pg#123"
+            - name: DB_HOST
+              value: "postgre"
+          resources:
+            requests:
+              memory: "128Mi"  # Memória mínima solicitada
+              cpu: "250m"      # CPU mínima solicitada
+            limits:
+              memory: "256Mi"  # Memória máxima permitida
+              cpu: "500m"      # CPU máxima permitida
 
 ---
 
