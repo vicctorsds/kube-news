@@ -1,64 +1,59 @@
 name: CI-CD Desafio
 
-on: 
-  push: 
+on:
+  push:
     branches: ["main"]
 
-jobs: 
-  CI:  
+jobs:
+  CI:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
 
-    steps: 
-      # Checkout do código
-      - uses: actions/checkout@v3
-
-      # Autenticação no DockerHub
-      - name: Autenticacao do DockerHub
+      - name: Autenticação no DockerHub
         uses: docker/login-action@v3.3.0
-        with: 
+        with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Construção e push da imagem Docker
-      - name: Construcao da imagem Docker
+      - name: Construção e push da imagem Docker
         uses: docker/build-push-action@v3
-        with: 
-          context: ./src  
+        with:
+          context: ./src
           file: ./src/Dockerfile
           push: true
           tags: |
             vicctorsds/desafio-kube-cicd:${{ github.run_id }}
             vicctorsds/desafio-kube-cicd:latest
 
-  CD:   
+  CD:
     runs-on: ubuntu-latest
     needs: [CI]
-    steps:  
-      # Checkout do código
-      - uses: actions/checkout@v3
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
 
-      # Configurar as credenciais AWS
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+      # Instalar o eksctl
+      - name: Instalar o eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.106.0/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
 
       # Atualizar kubeconfig para o EKS
-      - name: Update kubeconfig for EKS
-        run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name desafio-loomi
+      - name: Update kubeconfig for EKS using eksctl
+        run: eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --name desafio-loomi
 
-      # Setando o contexto do K8S
-      - name: Definindo o context
-        uses: Azure/k8s-set-context@v3.0
-        with: 
-          method: kubeconfig
-          kubeconfig: ${{ secrets.K8S_CONFIG }}
+      - name: Verificar Configuração do Kubectl
+        run: kubectl config view
 
-      # Deploy para o cluster Kubernetes
-      - name: Deploy to Kubernetes cluster
-        uses: Azure/k8s-deploy@v4.9 
-        with: 
-          images: vicctorsds/desafio-kube-cicd:${{ github.run_id }}
-          manifests: k8s/deployment.yaml
+      - name: Descrever o Deployment web
+        run: kubectl describe deployment web --namespace default
+
+      - name: Esperar pelo Rollout do Deployment
+        run: kubectl rollout status deployment/web --namespace default --timeout=10m
+
+      - name: Verificar os Logs da Pod
+        run: |
+          POD_NAME=$(kubectl get pods --namespace default -l app=web -o jsonpath='{.items[0].metadata.name}')
+          kubectl logs $POD_NAME --namespace default
