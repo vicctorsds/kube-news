@@ -39,8 +39,8 @@ jobs:
 
         # Setando o K8S
         - name: Definindo o context
-            uses: Azure/k8s-set-context@v3.0
-              with: 
-              method: kubeconfig
-              kubeconfig: ${{secrets.K8S_CONFIG}}
+          uses: Azure/k8s-set-context@v3.0
+           with: 
+            method: kubeconfig
+            kubeconfig: ${{secrets.K8S_CONFIG}}
           
