@@ -37,15 +37,28 @@ jobs:
       # Checkout do código
       - uses: actions/checkout@v3
 
-      # Setando o K8S
+      # Configurar as credenciais AWS
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Atualizar kubeconfig para o EKS
+      - name: Update kubeconfig for EKS
+        run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name my-cluster-name
+
+      # Setando o contexto do K8S
       - name: Definindo o context
         uses: Azure/k8s-set-context@v3.0
         with: 
           method: kubeconfig
           kubeconfig: ${{ secrets.K8S_CONFIG }}
-      -  name: Deploy to Kubernetes cluster
-         uses: Azure/k8s-deploy@v4.9 
-         with: 
-           images: vicctorsds/desafio-kube-cicd:${{ github.run_id }}
-           manifests: k8s/deployment.yaml
-        
+
+      # Deploy para o cluster Kubernetes
+      - name: Deploy to Kubernetes cluster
+        uses: Azure/k8s-deploy@v4.9 
+        with: 
+          images: vicctorsds/desafio-kube-cicd:${{ github.run_id }}
+          manifests: k8s/deployment.yaml
