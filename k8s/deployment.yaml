@@ -71,6 +71,9 @@ spec:
             value: "Pg#123" 
           - name: DB_HOST
             value: "postgre"  
+   spec:
+    progressDeadlineSeconds: 1200
+
 ---
 apiVersion: v1
 kind: Service
