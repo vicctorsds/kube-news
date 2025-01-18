@@ -47,7 +47,7 @@ jobs:
 
       # Atualizar kubeconfig para o EKS
       - name: Update kubeconfig for EKS
-        run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name devops-loomi
+        run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name desafio-loomi
 
       # Setando o contexto do K8S
       - name: Definindo o context
