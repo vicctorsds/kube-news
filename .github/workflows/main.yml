@@ -28,5 +28,5 @@ jobs:
           file: ./src/Dockerfile
           push: true
           tags: |
-            vicctorsds/desafio-kube-cicd:v1
+            vicctorsds/desafio-kube-cicd:${{github.run.number}}
             vicctorsds/desafio-kube-cicd:latest
