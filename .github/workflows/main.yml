@@ -29,3 +29,17 @@ jobs:
           tags: |
             vicctorsds/desafio-kube-cicd:${{ github.run_id }}
             vicctorsds/desafio-kube-cicd:latest
+
+    CD:   
+      runs-on: ubuntu-latest
+
+      steps:  
+         # Checkout do código
+        - uses: actions/checkout@v3
+
+        -name: Definindo o context
+        uses: Azure/k8s-set-context@v3.0
+        with: 
+          method: kubeconfig
+          kubeconfig: ${{secrets.K8S_CONFIG}}
+          
